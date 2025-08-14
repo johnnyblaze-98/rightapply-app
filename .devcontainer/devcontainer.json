@@ -1,0 +1,15 @@
+// This file tells Codespaces to use a basic Ubuntu container with Node.js, AWS CLI, SAM CLI, and Dart/Flutter tools pre-installed.
+{
+  "name": "RightApply Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "18"
+    },
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/devcontainers/features/aws-sam-cli:1": {},
+    "ghcr.io/devcontainers/features/dart:1": {},
+    "ghcr.io/devcontainers/features/flutter:1": {}
+  },
+  "postCreateCommand": "git config --global user.name 'Your Name' && git config --global user.email 'your@email.com'"
+}
