@@ -11,7 +11,7 @@ import 'utils/mac.dart';
 
 class DeviceAuthenticationPage extends StatefulWidget {
   final bool testMode;
-  const DeviceAuthenticationPage({Key? key, this.testMode = false}) : super(key: key);
+  const DeviceAuthenticationPage({super.key, this.testMode = false});
   @override
   State<DeviceAuthenticationPage> createState() => _DeviceAuthenticationPageState();
 }

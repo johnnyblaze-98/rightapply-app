@@ -10,7 +10,7 @@ void main() {
 
 
 class AppWithSplash extends StatefulWidget {
-  const AppWithSplash({Key? key}) : super(key: key);
+  const AppWithSplash({super.key});
 
   @override
   State<AppWithSplash> createState() => _AppWithSplashState();
@@ -51,6 +51,8 @@ class _AppWithSplashState extends State<AppWithSplash> {
 
 
 class SplashScreen extends StatelessWidget {
+  const SplashScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
