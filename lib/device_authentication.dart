@@ -269,7 +269,7 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
           isLoading = false;
         });
         Future.delayed(Duration(milliseconds: 500), () {
-          if (mounted) Navigator.pushReplacementNamed(context, '/admin');
+          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
         });
         return;
       } else {

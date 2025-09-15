@@ -12,7 +12,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-const String kApiBase = 'https://jdxjvgs3al.execute-api.us-east-1.amazonaws.com';
+// Local-only mode: leave empty to disable all external API calls
+const String kApiBase = '';
 
 class ApiService {
   static Future<Map<String, dynamic>> getStatus(String deviceId) async {

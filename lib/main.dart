@@ -1,7 +1,9 @@
 
 import 'package:flutter/material.dart';
 import 'device_authentication.dart';
+
 import 'admin_page.dart';
+import 'dashboard_screen.dart';
 
 
 void main() {
@@ -42,8 +44,9 @@ class _AppWithSplashState extends State<AppWithSplash> {
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => _showSplash ? SplashScreen() : DeviceAuthenticationPage(),
-        '/admin': (context) => AdminPage(),
+  '/': (context) => _showSplash ? SplashScreen() : DeviceAuthenticationPage(),
+  '/dashboard': (context) => DashboardScreen(),
+  '/admin': (context) => AdminPage(),
       },
     );
   }
