@@ -1,3 +1,57 @@
+# Flutter & Dart
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+
+# Flutter generated
+**/flutter_export_environment.sh
+**/GeneratedPluginRegistrant.*
+**/generated_plugin_registrant.*
+**/ephemeral/
+
+# Build outputs
+build/
+**/build/
+
+# Android
+android/.gradle/
+android/captures/
+android/local.properties
+**/local.properties
+android/app/**/debug/*
+android/app/**/profile/*
+android/app/**/release/*
+
+# iOS/macOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework/
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+
+# Linux/Windows
+linux/flutter/ephemeral/
+windows/flutter/ephemeral/
+
+# Web
+.firebase/
+
+# Coverage
+coverage/
+
+# IDE & tooling
+.idea/
+*.iml
+.vscode/
+
+# System files
+.DS_Store
+Thumbs.db
 # Miscellaneous
 *.class
 *.log
