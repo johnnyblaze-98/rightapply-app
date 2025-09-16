@@ -4,6 +4,7 @@ import 'device_authentication.dart';
 
 import 'admin_page.dart';
 import 'dashboard_screen.dart';
+import 'login_page.dart';
 
 
 void main() {
@@ -37,16 +38,17 @@ class _AppWithSplashState extends State<AppWithSplash> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RightApply.ai',
+      title: 'RightApply Marketing Tool',
       theme: ThemeData(
         primarySwatch: Colors.deepPurple,
         useMaterial3: true,
       ),
       initialRoute: '/',
       routes: {
-  '/': (context) => _showSplash ? SplashScreen() : DeviceAuthenticationPage(),
-  '/dashboard': (context) => DashboardScreen(),
-  '/admin': (context) => AdminPage(),
+        '/': (context) => _showSplash ? SplashScreen() : DeviceAuthenticationPage(),
+        '/login': (context) => const LoginPage(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/admin': (context) => const AdminPage(),
       },
     );
   }

@@ -5,6 +5,8 @@ import 'dart:ui';
 // import 'admin_page.dart';
 import 'services/api.dart';
 import 'utils/mac.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
 
 // Single correct implementation below
@@ -27,6 +29,9 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
   bool isAuthenticated = false;
   bool isLoading = true;
   bool hasRegistered = false;
+  String appVersion = '';
+  String role = 'user';
+  String requestId = '';
 
   @override
   void initState() {
@@ -181,6 +186,49 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
                                     ),
                                   ],
                                 ),
+                                if (!isAuthenticated && status == 'pending' && kApiBase.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 12.0),
+                                    child: ElevatedButton.icon(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blueGrey,
+                                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                        elevation: 0,
+                                      ),
+                                      onPressed: isLoading || hasRegistered ? null : _requestAccess,
+                                      icon: Icon(Icons.vpn_key, color: Colors.white),
+                                      label: Text(hasRegistered ? 'Request Sent' : 'Request Access', style: TextStyle(fontSize: 16, color: Colors.white)),
+                                    ),
+                                  ),
+                                if (!isAuthenticated && status == 'pending')
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 16.0),
+                                    child: Column(
+                                      children: [
+                                        Text('Scan to approve this device', style: TextStyle(fontSize: 14, color: Colors.deepPurple)),
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(12),
+                                            boxShadow: [
+                                              BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0,4)),
+                                            ],
+                                          ),
+                                          child: QrImageView(
+                                            data: _qrPayload(),
+                                            version: QrVersions.auto,
+                                            size: 180,
+                                            backgroundColor: Colors.white,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        SelectableText('Device ID: ' + deviceId, style: TextStyle(fontSize: 12, color: Colors.black54)),
+                                      ],
+                                    ),
+                                  ),
                                 if (!isAuthenticated && status == 'pending' && kApiBase.isEmpty)
                                   Padding(
                                     padding: const EdgeInsets.only(top: 16.0),
@@ -214,8 +262,18 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
     if (!mounted) return;
     setState(() { isLoading = true; });
     try {
+      // Try to load app version
+      try {
+        final info = await PackageInfo.fromPlatform();
+        appVersion = info.version;
+      } catch (_) {}
+
       final macOrId = await getPrimaryMacOrId();
       String model = 'Unknown', os = 'Unknown', plat = 'Unknown';
+      // Store device MAC/ID for downstream API calls (login, name lookup)
+      try {
+        ApiService.setDeviceMac(macOrId);
+      } catch (_) {}
       if (Platform.isAndroid) {
         final android = await DeviceInfoPlugin().androidInfo;
         model = android.model;
@@ -269,7 +327,7 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
           isLoading = false;
         });
         Future.delayed(Duration(milliseconds: 500), () {
-          if (mounted) Navigator.pushReplacementNamed(context, '/dashboard');
+          if (mounted) Navigator.pushReplacementNamed(context, '/login');
         });
         return;
       } else {
@@ -277,17 +335,7 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
           isAuthenticated = false;
           status = statusResp['status'] ?? 'pending';
         });
-        if (!hasRegistered) {
-          await ApiService.registerDevice(
-            mac: deviceId,
-            requesterEmail: requesterEmail,
-            platform: platform,
-            model: deviceModel,
-            osVersion: osVersion,
-          );
-          if (!mounted) return;
-          setState(() { hasRegistered = true; });
-        }
+        // Do not auto-register; user can press Request Access
       }
     } catch (e) {
       if (!mounted) return;
@@ -300,6 +348,38 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
     }
   }
   // ...existing code...
+
+  Future<void> _requestAccess() async {
+    setState(() { isLoading = true; });
+    try {
+      final resp = await ApiService.registerDevice(
+        mac: deviceId,
+        requesterEmail: requesterEmail,
+        platform: platform,
+        model: deviceModel,
+        osVersion: osVersion,
+        role: role,
+        appVersion: appVersion,
+      );
+      if (!mounted) return;
+      setState(() {
+        hasRegistered = true;
+        status = (resp['status'] ?? 'pending').toString();
+        requestId = (resp['id'] ?? '').toString();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Access request submitted.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to submit request: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() { isLoading = false; });
+    }
+  }
 
   Widget _buildDeviceInfoCard() {
     return Container(
@@ -362,7 +442,7 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
           ),
           Padding(
             padding: const EdgeInsets.only(left: 30, top: 2, bottom: 8),
-            child: SelectableText(maskId(deviceId), style: _infoValueStyle()),
+            child: SelectableText(deviceId, style: _infoValueStyle()),
           ),
           Row(
             children: [
@@ -391,5 +471,22 @@ class _DeviceAuthenticationPageState extends State<DeviceAuthenticationPage> {
 
   TextStyle _infoValueStyle() {
     return const TextStyle(fontSize: 16, color: Colors.black87, fontWeight: FontWeight.w500);
+  }
+
+  // Compose QR payload for admins to scan.
+  String _qrPayload() {
+    String safe(String s) => s.replaceAll('\n', ' ').replaceAll('|', ' ');
+    final map = <String, String>{
+      'mac': deviceId,
+      if (requestId.isNotEmpty) 'id': requestId,
+      'platform': platform,
+      'model': deviceModel,
+      'os': osVersion,
+      'app': appVersion,
+      if (kApiBase.isNotEmpty) 'api': kApiBase,
+      'status': status,
+      'ts': DateTime.now().toIso8601String(),
+    };
+    return map.entries.map((e) => '${e.key}=${safe(e.value)}').join('|');
   }
 }

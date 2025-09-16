@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: RightApply backend - API Gateway + Lambda + DynamoDB (device allowlist + user auth)
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 10
+    MemorySize: 256
+
+Parameters:
+  StackName:
+    Type: String
+    Default: rightapply-backend
+  DevicesTableName:
+    Type: String
+    Default: RightApplyDevices
+  AllowlistTableName:
+    Type: String
+    Default: RightApplyAllowlist
+  UsersTableName:
+    Type: String
+    Default: RightApplyUsers
+  JwtSecret:
+    Type: String
+    Default: dev-secret-change-me
+  StageName:
+    Type: String
+    Default: Prod
+
+Resources:
+  DevicesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref DevicesTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: mac
+          AttributeType: S
+        - AttributeName: status
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: mac-index
+          KeySchema:
+            - AttributeName: mac
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: status-index
+          KeySchema:
+            - AttributeName: status
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  AllowlistTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref AllowlistTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: mac
+          AttributeType: S
+      KeySchema:
+        - AttributeName: mac
+          KeyType: HASH
+
+  UsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Ref UsersTableName
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: username
+          AttributeType: S
+      KeySchema:
+        - AttributeName: username
+          KeyType: HASH
+
+  ApiGateway:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref StageName
+      CorsConfiguration:
+        AllowMethods:
+          - GET
+          - POST
+          - OPTIONS
+        AllowHeaders:
+          - "*"
+        AllowOrigins:
+          - "*"
+
+  ApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "${StackName}-api"
+      CodeUri: lambda/
+      Handler: index.handler
+      Environment:
+        Variables:
+          DEVICES_TABLE: !Ref DevicesTableName
+          ALLOWLIST_TABLE: !Ref AllowlistTableName
+          USERS_TABLE: !Ref UsersTableName
+          JWT_SECRET: !Ref JwtSecret
+      Policies:
+        - Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:GetItem
+                - dynamodb:UpdateItem
+                - dynamodb:Query
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt DevicesTable.Arn
+                - !Sub "${DevicesTable.Arn}/index/*"
+                - !GetAtt AllowlistTable.Arn
+                - !GetAtt UsersTable.Arn
+      Events:
+        ProxyApi:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+            ApiId: !Ref ApiGateway
+
+  ApiFunctionLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${StackName}-api"
+      RetentionInDays: 7
+
+Outputs:
+  ApiUrl:
+    Description: API base URL
+    Value: !Sub "https://${ApiGateway}.execute-api.${AWS::Region}.amazonaws.com/${StageName}"
+  DevicesTableOut:
+    Value: !Ref DevicesTableName
+  AllowlistTableOut:
+    Value: !Ref AllowlistTableName
+  UsersTableOut:
+    Value: !Ref UsersTableName

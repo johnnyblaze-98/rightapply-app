@@ -1,6 +1,52 @@
 # Flutter & Dart
 .dart_tool/
 .packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.metadata
+build/
+flutter_export_environment.sh
+
+# Android
+**/android/**/build/
+**/android/.gradle/
+**/android/local.properties
+
+# iOS/macOS
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/.generated/
+**/ios/Pods/
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/macos/Flutter/ephemeral/
+
+# Windows/Linux
+**/windows/x64/
+**/linux/x64/
+**/linux/flutter/ephemeral/
+**/linux/**/CMakeFiles/
+**/windows/**/CMakeFiles/
+
+# Web
+**/web/.dart_tool/
+**/web/build/
+
+# VS Code
+.vscode/
+
+# Node/SAM
+infra/.aws-sam/
+infra/node_modules/
+**/node_modules/
+
+# Logs
+*.log
+**/build/reports/
+# Flutter & Dart
+.dart_tool/
+.packages
 .pub-cache/
 .pub/
 
