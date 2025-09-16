@@ -12,8 +12,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-// Local-only mode: leave empty to disable all external API calls
-const String kApiBase = '';
+// For local proxy API (Vite/Express), set to http://localhost:5173
+// Leave empty to run fully offline with no API calls
+const String kApiBase = 'http://localhost:5173';
 
 class ApiService {
   static Future<Map<String, dynamic>> getStatus(String deviceId) async {

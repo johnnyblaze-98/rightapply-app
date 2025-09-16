@@ -41,6 +41,8 @@ windows/flutter/ephemeral/
 # Web
 .firebase/
 .aws-sam/
+api/node_modules/
+api/.env
 
 # Coverage
 coverage/
