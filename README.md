@@ -1,23 +1,32 @@
-# rightapply (Local-only)
+# rightapply (Desktop-only)
 
-This repo is cleaned for local/offline usage. All cloud and third-party integrations have been removed.
+This project is now desktop-only for local development (Windows first-class). A lightweight local API is included for device registration and allowlist checks.
 
-What changed:
-- Removed AWS infrastructure files and devcontainer configs
-- Disabled external API calls by setting `kApiBase` to empty in `lib/services/api.dart`
-- Kept core Flutter app code and assets only
+Included services:
+- Local API (Express + lowdb) on `http://localhost:5174`
+- Flutter desktop app pointing to the local API
 
-Run locally:
-1. Install Flutter SDK
-2. Get packages
-3. Run the app
-
-Commands (Windows `cmd.exe`):
-
+Run locally (Windows, Command Prompt):
+1) Start the local API
 ```
+cd api
+npm install
+node server.js
+```
+2) Run the desktop app in a new terminal
+```
+cd ..
 flutter pub get
-flutter run
+flutter run -d windows
 ```
+
+Endpoints (local API):
+- POST `/device/register` { mac, requesterEmail, platform, model?, osVersion?, reason? }
+- GET `/device/status/:deviceId`
+- GET `/device/pending`
+- POST `/device/decide` { requestId, approve:boolean, decidedBy? }
+- POST `/allowlist/add` { mac }
 
 Notes:
-- In local mode the app shows device info and a pending status; no network calls are made.
+- Devices with MACs in the allowlist auto-approve.
+- Data persisted to `api/data/db.json` (ignored by git).

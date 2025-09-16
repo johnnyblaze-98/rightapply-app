@@ -43,6 +43,7 @@ windows/flutter/ephemeral/
 .aws-sam/
 api/node_modules/
 api/.env
+api/data/*.json
 
 # Coverage
 coverage/
